@@ -95,7 +95,7 @@ const Home = () => {
             accessToken: response.headers.authorization || accessToken,
           })
         );
-
+        console.log(response.data)
         setIsEditing(false);
         toast.success("Profile updated successfully!");
       }

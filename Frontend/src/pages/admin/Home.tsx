@@ -7,6 +7,7 @@ import { RootState } from '../../redux/store';
 import { logoutAdmin } from '../../redux/Adminslice';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import { RxCross2 } from "react-icons/rx";
 
 interface User {
   _id: string;
@@ -39,6 +40,7 @@ const AdminHome = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<string>('');
   const [editingUser, setEditingUser] = useState<EditUser | null>(null);
+  const [search,setSearch] = useState('')
   const [newUser, setNewUser] = useState<NewUser>({
     name: '',
     email: '',
@@ -89,26 +91,22 @@ const AdminHome = () => {
       passwordError: ''
     };
   
-    // Validate name
     if (!nameRegex.test(newUser.name)) {
       newErrors.nameError = 'Name should be 2-30 characters long and contain only letters';
       isValid = false;
     }
   
-    // Validate email
     if (!emailRegex.test(newUser.email)) {
       newErrors.emailError = 'Please enter a valid email address';
       isValid = false;
     }
   
-    // Validate age
     const age = Number(newUser.age);
     if (isNaN(age) || age < 18 || age > 100) {
       newErrors.ageError = 'Age must be between 18 and 100';
       isValid = false;
     }
   
-    // Validate password
     if (!passwordRegex.test(newUser.password)) {
       newErrors.passwordError = 'Password must contain at least 8 characters, one uppercase, one number and one special character';
       isValid = false;
@@ -146,7 +144,6 @@ const AdminHome = () => {
             fetchUsers();
         }
     } catch (error: any) {
-        // Check if error message is about existing email
         if (error.response?.data?.message === 'Email already exists') {
             setErrors(prev => ({
                 ...prev,
@@ -187,7 +184,9 @@ const AdminHome = () => {
       toast.error(error.response?.data?.message || 'Failed to update user');
     }
   };
-
+  const handleSearchClick =(e)=>{
+    setSearch(e.target.value)
+  }
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
@@ -206,6 +205,12 @@ const AdminHome = () => {
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(search.toLowerCase()) ||
+    user.email.toLowerCase().includes(search.toLowerCase()) ||
+    user.age.toString().includes(search)
+  );
+
   return (
     <div className='w-full min-h-screen bg-black p-8'>
       <div className='flex justify-between items-center mb-8'>
@@ -215,6 +220,12 @@ const AdminHome = () => {
         >
           <FaPlus /> Add User
         </button>
+        <div className='flex justify-between items-center '>
+        <input value={search} onChange={handleSearchClick} type="text" className='border-2  border-amber-50 rounded-lg text-white' />
+        {search&&
+        <RxCross2 onClick={()=>setSearch('')} className='text-white size-6'/>
+        }
+        </div>
         <button
           onClick={handleLogout}
           className="bg-red-500 text-white px-4 py-2 rounded-lg"
@@ -233,7 +244,7 @@ const AdminHome = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <tr key={user._id} className="border-b border-white">
               <td className="border border-white px-4 py-2 text-white">
                 {editingUser?.id === user._id ? (
